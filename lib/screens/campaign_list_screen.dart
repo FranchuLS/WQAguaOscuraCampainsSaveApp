@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:wqaguaoscura_app/screens/campaign_detail_screen.dart';
 import '../models/campaign.dart';
 import '../services/campaign_avatar_service.dart';
 import '../services/campaign_repository.dart';
@@ -103,9 +104,11 @@ class _CampaignListScreenState extends State<CampaignListScreen> {
   }
 
   void _openCampaign(Campaign campaign) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Abrir ${campaign.name}')));
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => CampaignDetailScreen(campaign: campaign),
+      ),
+    );
   }
 
   @override
