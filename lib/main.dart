@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'screens/splash_screen.dart';
 import 'screens/campaign_list_screen.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
+  await Hive.openBox('campaignsBox');
+
   runApp(const WQApp());
 }
 
@@ -14,14 +19,7 @@ class WQApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'WQ AguaOscura',
-      theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: const Color(0xFF111418),
-        appBarTheme: const AppBarTheme(backgroundColor: Color(0xFF111418)),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF5B7FFF),
-          brightness: Brightness.dark,
-        ),
-      ),
+      theme: ThemeData.dark(),
       initialRoute: '/',
       routes: {
         '/': (context) => const SplashScreen(),

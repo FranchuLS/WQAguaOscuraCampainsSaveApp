@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/campaign.dart';
 import '../services/campaign_avatar_service.dart';
+import '../services/campaign_repository.dart';
 import '../widgets/campaign_card.dart';
 
 class CampaignListScreen extends StatefulWidget {
@@ -12,23 +13,25 @@ class CampaignListScreen extends StatefulWidget {
 
 class _CampaignListScreenState extends State<CampaignListScreen> {
   final CampaignAvatarService _avatarService = CampaignAvatarService();
+  final CampaignRepository _repository = CampaignRepository();
 
-  final List<Campaign> _campaigns = [
-    Campaign(
-      id: '1',
-      name: 'Grupo Viernes',
-      currentAct: 1,
-      heroCount: 4,
-      pendingLevelsCount: 3,
-    ),
-    Campaign(
-      id: '2',
-      name: 'Grupo Domingo',
-      currentAct: 2,
-      heroCount: 3,
-      pendingLevelsCount: 2,
-    ),
-  ];
+  List<Campaign> _campaigns = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCampaigns();
+  }
+
+  void _loadCampaigns() {
+    final campaigns = _repository.getAllCampaigns();
+
+    setState(() {
+      _campaigns = campaigns;
+      _isLoading = false;
+    });
+  }
 
   Future<void> _showCreateCampaignDialog() async {
     final controller = TextEditingController();
@@ -78,20 +81,21 @@ class _CampaignListScreenState extends State<CampaignListScreen> {
       return;
     }
 
-    setState(() {
-      _campaigns.add(
-        Campaign(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          name: result,
-          currentAct: 1,
-          heroCount: 0,
-          pendingLevelsCount: 0,
-        ),
-      );
-    });
+    final campaign = Campaign(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      name: result,
+      currentAct: 1,
+      heroCount: 0,
+      pendingLevelsCount: 0,
+    );
+
+    await _repository.saveCampaign(campaign);
+    _loadCampaigns();
   }
 
-  void _deleteCampaign(Campaign campaign) {
+  Future<void> _deleteCampaign(Campaign campaign) async {
+    await _repository.deleteCampaign(campaign.id);
+
     setState(() {
       _campaigns.removeWhere((item) => item.id == campaign.id);
       _avatarService.removeCampaign(campaign.id);
@@ -124,30 +128,30 @@ class _CampaignListScreenState extends State<CampaignListScreen> {
           Positioned.fill(
             child: Container(color: Colors.black.withValues(alpha: 0.45)),
           ),
-          _campaigns.isEmpty
-              ? const Center(
-                  child: Text(
-                    'No hay campañas',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                )
-              : ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _campaigns.length,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(height: 14),
-                  itemBuilder: (context, index) {
-                    final campaign = _campaigns[index];
-                    return CampaignCard(
-                      campaign: campaign,
-                      imagePath: _avatarService.getImageForCampaign(
-                        campaign.id,
-                      ),
-                      onTap: () => _openCampaign(campaign),
-                      onDelete: () => _deleteCampaign(campaign),
-                    );
-                  },
-                ),
+          if (_isLoading)
+            const Center(child: CircularProgressIndicator())
+          else if (_campaigns.isEmpty)
+            const Center(
+              child: Text(
+                'No hay campañas',
+                style: TextStyle(color: Colors.white),
+              ),
+            )
+          else
+            ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: _campaigns.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 14),
+              itemBuilder: (context, index) {
+                final campaign = _campaigns[index];
+                return CampaignCard(
+                  campaign: campaign,
+                  imagePath: _avatarService.getImageForCampaign(campaign.id),
+                  onTap: () => _openCampaign(campaign),
+                  onDelete: () => _deleteCampaign(campaign),
+                );
+              },
+            ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(

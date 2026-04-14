@@ -28,4 +28,24 @@ class Campaign {
       pendingLevelsCount: pendingLevelsCount ?? this.pendingLevelsCount,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'currentAct': currentAct,
+      'heroCount': heroCount,
+      'pendingLevelsCount': pendingLevelsCount,
+    };
+  }
+
+  factory Campaign.fromJson(Map<String, dynamic> json) {
+    return Campaign(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      currentAct: json['currentAct'] as int,
+      heroCount: json['heroCount'] as int,
+      pendingLevelsCount: json['pendingLevelsCount'] as int,
+    );
+  }
 }
