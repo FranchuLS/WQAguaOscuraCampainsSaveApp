@@ -1,24 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'screens/splash_screen.dart';
+import 'screens/campaign_list_screen.dart';
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Hive.initFlutter();
-  await Hive.openBox('campaignsBox');
-  runApp(const MyApp());
+void main() {
+  runApp(const WQApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class WQApp extends StatelessWidget {
+  const WQApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Aguaoscura Tracker',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-      ),
-      home: const Scaffold(body: Center(child: Text('Proyecto iniciado'))),
+      debugShowCheckedModeBanner: false,
+      title: 'WQ AguaOscura',
+      theme: ThemeData.dark(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const SplashScreen(),
+        '/campaigns': (context) => const CampaignListScreen(),
+      },
     );
   }
 }
