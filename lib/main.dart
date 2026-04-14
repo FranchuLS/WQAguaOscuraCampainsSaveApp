@@ -14,7 +14,14 @@ class WQApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'WQ AguaOscura',
-      theme: ThemeData.dark(),
+      theme: ThemeData.dark().copyWith(
+        scaffoldBackgroundColor: const Color(0xFF111418),
+        appBarTheme: const AppBarTheme(backgroundColor: Color(0xFF111418)),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF5B7FFF),
+          brightness: Brightness.dark,
+        ),
+      ),
       initialRoute: '/',
       routes: {
         '/': (context) => const SplashScreen(),
