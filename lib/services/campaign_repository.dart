@@ -17,6 +17,15 @@ class CampaignRepository {
     return campaigns;
   }
 
+  Campaign? getCampaignById(String campaignId) {
+    final item = _box.get(campaignId);
+    if (item == null) {
+      return null;
+    }
+
+    return Campaign.fromJson(Map<String, dynamic>.from(item));
+  }
+
   Future<void> saveCampaign(Campaign campaign) async {
     await _box.put(campaign.id, campaign.toJson());
   }

@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:wqaguaoscura_app/screens/campaign_detail_screen.dart';
+
 import '../models/campaign.dart';
 import '../services/campaign_avatar_service.dart';
 import '../services/campaign_repository.dart';
 import '../services/campaign_hero_factory.dart';
 import '../services/campaign_hero_repository.dart';
 import '../services/hero_template_loader.dart';
+import '../services/campaign_level_repository.dart';
+import '../services/campaign_level_service.dart';
 import '../widgets/campaign_card.dart';
 import '../widgets/app_background.dart';
 
@@ -22,6 +25,8 @@ class _CampaignListScreenState extends State<CampaignListScreen> {
   final CampaignHeroRepository _heroRepository = CampaignHeroRepository();
   final HeroTemplateLoader _heroTemplateLoader = HeroTemplateLoader();
   final CampaignHeroFactory _heroFactory = CampaignHeroFactory();
+  final CampaignLevelService _levelService = CampaignLevelService();
+  final CampaignLevelRepository _levelRepository = CampaignLevelRepository();
 
   List<Campaign> _campaigns = [];
   bool _isLoading = true;
@@ -107,6 +112,7 @@ class _CampaignListScreenState extends State<CampaignListScreen> {
 
     await _repository.saveCampaign(campaign);
     await _heroRepository.saveMany(initialHeroes);
+    await _levelService.bootstrapActLevels(campaign);
 
     _loadCampaigns();
   }
@@ -114,6 +120,7 @@ class _CampaignListScreenState extends State<CampaignListScreen> {
   Future<void> _deleteCampaign(Campaign campaign) async {
     await _repository.deleteCampaign(campaign.id);
     await _heroRepository.deleteHeroesByCampaign(campaign.id);
+    await _levelRepository.deleteLevelsByCampaign(campaign.id);
 
     setState(() {
       _campaigns.removeWhere((item) => item.id == campaign.id);
@@ -121,12 +128,14 @@ class _CampaignListScreenState extends State<CampaignListScreen> {
     });
   }
 
-  void _openCampaign(Campaign campaign) {
-    Navigator.of(context).push(
+  Future<void> _openCampaign(Campaign campaign) async {
+    await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => CampaignDetailScreen(campaign: campaign),
       ),
     );
+
+    _loadCampaigns();
   }
 
   @override
@@ -134,9 +143,7 @@ class _CampaignListScreenState extends State<CampaignListScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: _buildAppBar(),
-      body: AppBackground(
-        child: _buildBody(),
-      ),
+      body: AppBackground(child: _buildBody()),
       floatingActionButton: _buildFloatingActionButton(),
     );
   }
@@ -156,10 +163,7 @@ class _CampaignListScreenState extends State<CampaignListScreen> {
 
     if (_campaigns.isEmpty) {
       return const Center(
-        child: Text(
-          'No hay campañas',
-          style: TextStyle(color: Colors.white),
-        ),
+        child: Text('No hay campañas', style: TextStyle(color: Colors.white)),
       );
     }
 

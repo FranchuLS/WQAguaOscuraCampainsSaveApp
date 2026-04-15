@@ -2,14 +2,22 @@ import 'package:flutter/material.dart';
 
 import '../models/campaign.dart';
 import '../models/campaign_hero.dart';
+import '../models/campaign_level.dart';
 import '../services/campaign_hero_repository.dart';
+import '../services/campaign_level_repository.dart';
+import '../services/campaign_level_service.dart';
+import '../services/campaign_repository.dart';
 import '../widgets/action_button_tile.dart';
-import '../widgets/section_card.dart';
+import '../widgets/app_background.dart';
+import '../widgets/campaign_hero_tile.dart';
 import '../widgets/info_pill.dart';
 import '../widgets/pending_level_tile.dart';
-import '../widgets/campaign_hero_tile.dart';
-import '../widgets/app_background.dart';
+import '../widgets/section_card.dart';
 import 'hero_detail_dialog.dart';
+import 'levels_all_screen.dart';
+import 'levels_completed_screen.dart';
+import 'levels_discarded_screen.dart';
+import 'levels_pending_screen.dart';
 
 class CampaignDetailScreen extends StatefulWidget {
   final Campaign campaign;
@@ -22,28 +30,50 @@ class CampaignDetailScreen extends StatefulWidget {
 
 class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
   final CampaignHeroRepository _heroRepository = CampaignHeroRepository();
+  final CampaignLevelRepository _levelRepository = CampaignLevelRepository();
+  final CampaignLevelService _levelService = CampaignLevelService();
+  final CampaignRepository _campaignRepository = CampaignRepository();
+
+  late Campaign _campaign;
 
   List<CampaignHero> _heroes = [];
-  bool _isLoadingHeroes = true;
+  List<CampaignLevel> _currentLevels = [];
 
-  bool get _canAdvanceAct => widget.campaign.pendingLevelsCount == 0;
+  bool _isLoadingHeroes = true;
+  bool _isLoadingLevels = true;
+
+  bool get _canAdvanceAct => _campaign.pendingLevelsCount == 0;
 
   @override
   void initState() {
     super.initState();
-    _loadHeroes();
+    _campaign = widget.campaign;
+    _bootstrapAndRefresh();
   }
 
-  Future<void> _loadHeroes() async {
-    final heroes = _heroRepository.getHeroesByCampaign(widget.campaign.id);
+  Future<void> _bootstrapAndRefresh() async {
+    _campaign = await _levelService.bootstrapActLevels(_campaign);
+    await _refreshAll();
+  }
+
+  Future<void> _refreshAll() async {
+    final freshCampaign = _campaignRepository.getCampaignById(_campaign.id);
+    final heroes = _heroRepository.getHeroesByCampaign(_campaign.id);
+    final currentLevels = _levelRepository.getCurrentRoundLevels(
+      _campaign.id,
+      _campaign.currentAct,
+    );
 
     if (!mounted) {
       return;
     }
 
     setState(() {
+      _campaign = freshCampaign ?? _campaign;
       _heroes = heroes;
+      _currentLevels = currentLevels;
       _isLoadingHeroes = false;
+      _isLoadingLevels = false;
     });
   }
 
@@ -53,13 +83,61 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
       builder: (context) => HeroDetailDialog(hero: hero),
     );
 
-    await _loadHeroes();
+    await _refreshAll();
   }
 
-  void _showNotImplementedMessage(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+  Future<void> _openPendingLevels() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => LevelsPendingScreen(campaign: _campaign),
+      ),
+    );
+
+    await _refreshAll();
+  }
+
+  Future<void> _openCompletedLevels() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => LevelsCompletedScreen(campaign: _campaign),
+      ),
+    );
+
+    await _refreshAll();
+  }
+
+  Future<void> _openDiscardedLevels() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => LevelsDiscardedScreen(campaign: _campaign),
+      ),
+    );
+
+    await _refreshAll();
+  }
+
+  Future<void> _openAllLevels() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => LevelsAllScreen(campaign: _campaign),
+      ),
+    );
+
+    await _refreshAll();
+  }
+
+  Future<void> _advanceAct() async {
+    final updatedCampaign = await _levelService.advanceAct(_campaign);
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _campaign = updatedCampaign;
+    });
+
+    await _refreshAll();
   }
 
   void _showAddHeroUnavailableDialog() {
@@ -85,20 +163,31 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     );
   }
 
+  String _typeLabel(LevelType type) {
+    switch (type) {
+      case LevelType.safePlace:
+        return 'Lugar de descanso';
+      case LevelType.encounter:
+        return 'Encuentro';
+      case LevelType.event:
+        return 'Evento';
+      case LevelType.boss:
+        return 'Jefe';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final campaign = widget.campaign;
-
     return Scaffold(
-      appBar: _buildAppBar(campaign),
+      appBar: _buildAppBar(),
       body: AppBackground(
         child: SafeArea(
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              _buildCampaignHeader(campaign),
+              _buildCampaignHeader(),
               const SizedBox(height: 16),
-              _buildPendingLevelsSection(campaign),
+              _buildPendingLevelsSection(),
               const SizedBox(height: 16),
               _buildHeroesSection(),
               const SizedBox(height: 16),
@@ -112,21 +201,21 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     );
   }
 
-  AppBar _buildAppBar(Campaign campaign) {
+  AppBar _buildAppBar() {
     return AppBar(
-      title: Text(campaign.name),
+      title: Text(_campaign.name),
       centerTitle: true,
       backgroundColor: Colors.black.withValues(alpha: 0.35),
     );
   }
 
-  Widget _buildCampaignHeader(Campaign campaign) {
+  Widget _buildCampaignHeader() {
     return SectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            campaign.name,
+            _campaign.name,
             style: const TextStyle(
               color: Colors.white,
               fontSize: 26,
@@ -140,12 +229,15 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
             children: [
               InfoPill(
                 icon: Icons.flag_rounded,
-                label: 'Acto ${campaign.currentAct}',
+                label: 'Acto ${_campaign.currentAct}',
               ),
-              InfoPill(icon: Icons.groups_rounded, label: '${_heroes.length} héroes'),
+              InfoPill(
+                icon: Icons.groups_rounded,
+                label: '${_heroes.length} héroes',
+              ),
               InfoPill(
                 icon: Icons.map_rounded,
-                label: '${campaign.pendingLevelsCount} pendientes',
+                label: '${_campaign.pendingLevelsCount} pendientes',
               ),
             ],
           ),
@@ -154,24 +246,39 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     );
   }
 
-  Widget _buildPendingLevelsSection(Campaign campaign) {
+  Widget _buildPendingLevelsSection() {
     return SectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             'Mapas pendientes',
-            style: TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 19,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 12),
-          if (campaign.pendingLevelsCount == 0)
-            const Text('No hay mapas pendientes.', style: TextStyle(color: Colors.white70))
+          if (_isLoadingLevels)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: CircularProgressIndicator(),
+              ),
+            )
+          else if (_currentLevels.isEmpty)
+            const Text(
+              'No hay mapas pendientes.',
+              style: TextStyle(color: Colors.white70),
+            )
           else
-            ...List.generate(
-              campaign.pendingLevelsCount,
-              (index) => Padding(
+            ..._currentLevels.map(
+              (level) => Padding(
                 padding: const EdgeInsets.only(bottom: 10),
-                child: PendingLevelTile(text: 'Mapa pendiente ${index + 1}'),
+                child: PendingLevelTile(
+                  text: '${level.name} · ${_typeLabel(level.type)}',
+                ),
               ),
             ),
         ],
@@ -186,7 +293,11 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
         children: [
           const Text(
             'Héroes',
-            style: TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 19,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 12),
           if (_isLoadingHeroes)
@@ -229,25 +340,25 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
           ActionButtonTile(
             icon: Icons.alt_route_rounded,
             label: 'Ver siguientes niveles',
-            onTap: () => _showNotImplementedMessage('Ver siguientes niveles'),
+            onTap: _openPendingLevels,
           ),
           const SizedBox(height: 10),
           ActionButtonTile(
             icon: Icons.task_alt_rounded,
             label: 'Ver niveles superados',
-            onTap: () => _showNotImplementedMessage('Ver niveles superados'),
+            onTap: _openCompletedLevels,
           ),
           const SizedBox(height: 10),
           ActionButtonTile(
             icon: Icons.block_rounded,
             label: 'Ver niveles descartados',
-            onTap: () => _showNotImplementedMessage('Ver niveles descartados'),
+            onTap: _openDiscardedLevels,
           ),
           const SizedBox(height: 10),
           ActionButtonTile(
             icon: Icons.library_books_rounded,
             label: 'Ver todos los niveles',
-            onTap: () => _showNotImplementedMessage('Ver todos los niveles'),
+            onTap: _openAllLevels,
           ),
         ],
       ),
@@ -261,9 +372,12 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
         foregroundColor: Colors.black,
         padding: const EdgeInsets.symmetric(vertical: 16),
       ),
-      onPressed: () => _showNotImplementedMessage('Pasar de acto'),
+      onPressed: _advanceAct,
       icon: const Icon(Icons.auto_awesome_rounded),
-      label: const Text('Pasar de acto', style: TextStyle(fontWeight: FontWeight.bold)),
+      label: const Text(
+        'Pasar de acto',
+        style: TextStyle(fontWeight: FontWeight.bold),
+      ),
     );
   }
 }

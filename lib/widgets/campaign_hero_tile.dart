@@ -20,11 +20,33 @@ class CampaignHeroTile extends StatelessWidget {
     if (hero.statuses.isEmpty) {
       return 'Sin estados';
     }
+
     return hero.statuses.join(', ');
+  }
+
+  String get _imagePath {
+    switch (hero.name.trim().toLowerCase()) {
+      case 'bren tylis':
+        return 'assets/images/heroes/bren_tylis.png';
+
+      case 'drolf cabezahierro':
+        return 'assets/images/heroes/drolf_cabezahierro.png';
+
+      case 'edmark valoran':
+        return 'assets/images/heroes/edmark_valoran.png';
+
+      case 'inara sion':
+        return 'assets/images/heroes/inara_sion.png';
+
+      default:
+        return '';
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final hasImage = _imagePath.isNotEmpty;
+
     return Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(14),
@@ -36,19 +58,28 @@ class CampaignHeroTile extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
             color: const Color(0xFF1F2E2A),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
           ),
           child: Row(
             children: [
               Container(
-                width: 42,
-                height: 42,
+                width: 52,
+                height: 52,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(12),
                   color: Colors.black.withValues(alpha: 0.25),
+                  image: hasImage
+                      ? DecorationImage(
+                          image: AssetImage(_imagePath),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
                 ),
-                child: const Icon(Icons.person_rounded, color: Colors.white),
+                child: hasImage
+                    ? null
+                    : const Icon(Icons.person_rounded, color: Colors.white),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,6 +89,7 @@ class CampaignHeroTile extends StatelessWidget {
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
+                        fontSize: 15,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -68,10 +100,13 @@ class CampaignHeroTile extends StatelessWidget {
                         fontSize: 13,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 3),
                     Text(
                       _statusesLabel,
-                      style: const TextStyle(color: Colors.white60, fontSize: 12),
+                      style: const TextStyle(
+                        color: Colors.white60,
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),

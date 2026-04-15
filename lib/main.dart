@@ -8,6 +8,7 @@ Future<void> main() async {
   await Hive.initFlutter();
   await Hive.openBox('campaignsBox');
   await Hive.openBox('campaignHeroesBox');
+  await Hive.openBox('campaignLevelsBox');
   runApp(const WQApp());
 }
 

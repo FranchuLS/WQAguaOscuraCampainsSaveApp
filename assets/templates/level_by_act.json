@@ -1,0 +1,140 @@
+{
+    "acts": [
+        {
+            "act": 1,
+            "name": "Acto 1",
+            "regularLevels": [
+                {
+                    "type": "Lugar de descanso",
+                    "name": "Un breve respiro"
+                },
+                {
+                    "type": "Lugar de descanso",
+                    "name": "Un breve respiro"
+                },
+                {
+                    "type": "Encuentro",
+                    "name": "Huir del miasma"
+                },
+                {
+                    "type": "Encuentro",
+                    "name": "El Príncipe de las Llagas"
+                },
+                {
+                    "type": "Encuentro",
+                    "name": "Semillas del mal"
+                },
+                {
+                    "type": "Encuentro",
+                    "name": "Vínculo bacteriano"
+                },
+                {
+                    "type": "Lugar de descanso",
+                    "name": "Un breve respiro"
+                },
+                {
+                    "type": "Evento",
+                    "name": "Sesión de esparrin"
+                },
+                {
+                    "type": "Evento",
+                    "name": "Santuario del Orden"
+                },
+                {
+                    "type": "Evento",
+                    "name": "Manantial de Agua Ghyranis"
+                },
+                {
+                    "type": "Encuentro",
+                    "name": "El Pantano Hambriento"
+                },
+                {
+                    "type": "Encuentro",
+                    "name": "Escaramuza y matanza"
+                },
+                {
+                    "type": "Encuentro",
+                    "name": "Problemas profundos"
+                },
+                {
+                    "type": "Encuentro",
+                    "name": "Salvar al venado Viridiano"
+                },
+                {
+                    "type": "Encuentro",
+                    "name": "Limpiar el pozo de engendros"
+                },
+                {
+                    "type": "Evento",
+                    "name": "Elige tu suerte"
+                },
+                {
+                    "type": "Encuentro",
+                    "name": "Hurgar en la Inmundicia"
+                },
+                {
+                    "type": "Encuentro",
+                    "name": "Derribar los santuarios de la putrefacción"
+                },
+                {
+                    "type": "Encuentro",
+                    "name": "Emboscada bestial"
+                },
+                {
+                    "type": "Evento",
+                    "name": "Trato justo"
+                },
+                {
+                    "type": "Evento",
+                    "name": "Una partida de viejos huesos"
+                },
+                {
+                    "type": "Evento",
+                    "name": "Tesoros Atrapados"
+                },
+                {
+                    "type": "Evento",
+                    "name": "Puertas de Azyr"
+                },
+                {
+                    "type": "Encuentro",
+                    "name": "Enfrentados a Pezuñavil"
+                },
+                {
+                    "type": "Evento",
+                    "name": "Botín maldito"
+                },
+                {
+                    "type": "Evento",
+                    "name": "Lugar de culto"
+                },
+                {
+                    "type": "Encuentro",
+                    "name": "Entrada en la Abadía"
+                },
+                {
+                    "type": "Encuentro",
+                    "name": "Escapar del pozo infestado"
+                },
+                {
+                    "type": "Encuentro",
+                    "name": "Alinear las piedras Ley"
+                }
+            ],
+            "bossLevels": [
+                {
+                    "type": "Jefe",
+                    "name": "El Cubil de las Fieras"
+                },
+                {
+                    "type": "Jefe",
+                    "name": "Sacrificio de Pezuñavil"
+                },
+                {
+                    "type": "Jefe",
+                    "name": "Trampa de Pezuñavil"
+                }
+            ]
+        }
+    ]
+}
