@@ -8,6 +8,7 @@ import '../widgets/section_card.dart';
 import '../widgets/info_pill.dart';
 import '../widgets/pending_level_tile.dart';
 import '../widgets/campaign_hero_tile.dart';
+import '../widgets/app_background.dart';
 import 'hero_detail_dialog.dart';
 
 class CampaignDetailScreen extends StatefulWidget {
@@ -90,26 +91,23 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
 
     return Scaffold(
       appBar: _buildAppBar(campaign),
-      body: Stack(
-        children: [
-          _buildBackground(),
-          SafeArea(
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                _buildCampaignHeader(campaign),
-                const SizedBox(height: 16),
-                _buildPendingLevelsSection(campaign),
-                const SizedBox(height: 16),
-                _buildHeroesSection(),
-                const SizedBox(height: 16),
-                _buildActionsSection(),
-                const SizedBox(height: 20),
-                if (_canAdvanceAct) _buildAdvanceActButton(),
-              ],
-            ),
+      body: AppBackground(
+        child: SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              _buildCampaignHeader(campaign),
+              const SizedBox(height: 16),
+              _buildPendingLevelsSection(campaign),
+              const SizedBox(height: 16),
+              _buildHeroesSection(),
+              const SizedBox(height: 16),
+              _buildActionsSection(),
+              const SizedBox(height: 20),
+              if (_canAdvanceAct) _buildAdvanceActButton(),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -119,19 +117,6 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
       title: Text(campaign.name),
       centerTitle: true,
       backgroundColor: Colors.black.withValues(alpha: 0.35),
-    );
-  }
-
-  Widget _buildBackground() {
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: Image.asset('assets/images/luz_purpura.png', fit: BoxFit.cover),
-        ),
-        Positioned.fill(
-          child: Container(color: Colors.black.withValues(alpha: 0.45)),
-        ),
-      ],
     );
   }
 

@@ -7,6 +7,7 @@ import '../services/campaign_hero_factory.dart';
 import '../services/campaign_hero_repository.dart';
 import '../services/hero_template_loader.dart';
 import '../widgets/campaign_card.dart';
+import '../widgets/app_background.dart';
 
 class CampaignListScreen extends StatefulWidget {
   const CampaignListScreen({super.key});
@@ -132,55 +133,59 @@ class _CampaignListScreenState extends State<CampaignListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        title: const Text('Campañas'),
-        centerTitle: true,
-        backgroundColor: Colors.black.withValues(alpha: 0.45),
+      appBar: _buildAppBar(),
+      body: AppBackground(
+        child: _buildBody(),
       ),
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/luz_purpura.png',
-              fit: BoxFit.cover,
-            ),
-          ),
-          Positioned.fill(
-            child: Container(color: Colors.black.withValues(alpha: 0.45)),
-          ),
-          if (_isLoading)
-            const Center(child: CircularProgressIndicator())
-          else if (_campaigns.isEmpty)
-            const Center(
-              child: Text(
-                'No hay campañas',
-                style: TextStyle(color: Colors.white),
-              ),
-            )
-          else
-            ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: _campaigns.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 14),
-              itemBuilder: (context, index) {
-                final campaign = _campaigns[index];
-                return CampaignCard(
-                  campaign: campaign,
-                  imagePath: _avatarService.getImageForCampaign(campaign.id),
-                  onTap: () => _openCampaign(campaign),
-                  onDelete: () => _deleteCampaign(campaign),
-                );
-              },
-            ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showCreateCampaignDialog,
-        backgroundColor: const Color(0xFF6BBF8B),
-        foregroundColor: Colors.black,
-        icon: const Icon(Icons.add),
-        label: const Text('Nueva'),
-      ),
+      floatingActionButton: _buildFloatingActionButton(),
+    );
+  }
+
+  AppBar _buildAppBar() {
+    return AppBar(
+      title: const Text('Campañas'),
+      centerTitle: true,
+      backgroundColor: Colors.black.withValues(alpha: 0.45),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_campaigns.isEmpty) {
+      return const Center(
+        child: Text(
+          'No hay campañas',
+          style: TextStyle(color: Colors.white),
+        ),
+      );
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.all(16),
+      itemCount: _campaigns.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 14),
+      itemBuilder: (context, index) {
+        final campaign = _campaigns[index];
+        return CampaignCard(
+          campaign: campaign,
+          imagePath: _avatarService.getImageForCampaign(campaign.id),
+          onTap: () => _openCampaign(campaign),
+          onDelete: () => _deleteCampaign(campaign),
+        );
+      },
+    );
+  }
+
+  Widget _buildFloatingActionButton() {
+    return FloatingActionButton.extended(
+      onPressed: _showCreateCampaignDialog,
+      backgroundColor: const Color(0xFF6BBF8B),
+      foregroundColor: Colors.black,
+      icon: const Icon(Icons.add),
+      label: const Text('Nueva'),
     );
   }
 }
