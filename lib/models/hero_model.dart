@@ -15,6 +15,22 @@ class HeroModel {
     required this.wounds,
   });
 
+  HeroModel copyWith({
+    String? id,
+    String? campaignId,
+    String? name,
+    HeroStatus? status,
+    int? wounds,
+  }) {
+    return HeroModel(
+      id: id ?? this.id,
+      campaignId: campaignId ?? this.campaignId,
+      name: name ?? this.name,
+      status: status ?? this.status,
+      wounds: wounds ?? this.wounds,
+    );
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -30,7 +46,9 @@ class HeroModel {
       id: json['id'] as String,
       campaignId: json['campaignId'] as String,
       name: json['name'] as String,
-      status: HeroStatus.values.firstWhere((e) => e.name == json['status']),
+      status: HeroStatus.values.firstWhere(
+        (value) => value.name == json['status'],
+      ),
       wounds: json['wounds'] as int,
     );
   }

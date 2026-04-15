@@ -3,6 +3,9 @@ import 'package:wqaguaoscura_app/screens/campaign_detail_screen.dart';
 import '../models/campaign.dart';
 import '../services/campaign_avatar_service.dart';
 import '../services/campaign_repository.dart';
+import '../services/campaign_hero_factory.dart';
+import '../services/campaign_hero_repository.dart';
+import '../services/hero_template_loader.dart';
 import '../widgets/campaign_card.dart';
 
 class CampaignListScreen extends StatefulWidget {
@@ -15,6 +18,9 @@ class CampaignListScreen extends StatefulWidget {
 class _CampaignListScreenState extends State<CampaignListScreen> {
   final CampaignAvatarService _avatarService = CampaignAvatarService();
   final CampaignRepository _repository = CampaignRepository();
+  final CampaignHeroRepository _heroRepository = CampaignHeroRepository();
+  final HeroTemplateLoader _heroTemplateLoader = HeroTemplateLoader();
+  final CampaignHeroFactory _heroFactory = CampaignHeroFactory();
 
   List<Campaign> _campaigns = [];
   bool _isLoading = true;
@@ -82,20 +88,31 @@ class _CampaignListScreenState extends State<CampaignListScreen> {
       return;
     }
 
+    final campaignId = DateTime.now().millisecondsSinceEpoch.toString();
+
     final campaign = Campaign(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: campaignId,
       name: result,
       currentAct: 1,
-      heroCount: 0,
+      heroCount: 4,
       pendingLevelsCount: 0,
     );
 
+    final templates = await _heroTemplateLoader.loadTemplates();
+    final initialHeroes = _heroFactory.buildInitialHeroes(
+      campaignId: campaignId,
+      templates: templates,
+    );
+
     await _repository.saveCampaign(campaign);
+    await _heroRepository.saveMany(initialHeroes);
+
     _loadCampaigns();
   }
 
   Future<void> _deleteCampaign(Campaign campaign) async {
     await _repository.deleteCampaign(campaign.id);
+    await _heroRepository.deleteHeroesByCampaign(campaign.id);
 
     setState(() {
       _campaigns.removeWhere((item) => item.id == campaign.id);

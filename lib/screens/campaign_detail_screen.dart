@@ -1,17 +1,90 @@
 import 'package:flutter/material.dart';
+
 import '../models/campaign.dart';
+import '../models/campaign_hero.dart';
+import '../services/campaign_hero_repository.dart';
 import '../widgets/action_button_tile.dart';
 import '../widgets/section_card.dart';
+import 'hero_detail_dialog.dart';
 
-class CampaignDetailScreen extends StatelessWidget {
+class CampaignDetailScreen extends StatefulWidget {
   final Campaign campaign;
 
   const CampaignDetailScreen({super.key, required this.campaign});
 
-  bool get _canAdvanceAct => campaign.pendingLevelsCount == 0;
+  @override
+  State<CampaignDetailScreen> createState() => _CampaignDetailScreenState();
+}
+
+class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
+  final CampaignHeroRepository _heroRepository = CampaignHeroRepository();
+
+  List<CampaignHero> _heroes = [];
+  bool _isLoadingHeroes = true;
+
+  bool get _canAdvanceAct => widget.campaign.pendingLevelsCount == 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHeroes();
+  }
+
+  Future<void> _loadHeroes() async {
+    final heroes = _heroRepository.getHeroesByCampaign(widget.campaign.id);
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _heroes = heroes;
+      _isLoadingHeroes = false;
+    });
+  }
+
+  Future<void> _openHeroDialog(CampaignHero hero) async {
+    await showDialog<void>(
+      context: context,
+      builder: (context) => HeroDetailDialog(hero: hero),
+    );
+
+    await _loadHeroes();
+  }
+
+  void _showNotImplementedMessage(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  void _showAddHeroUnavailableDialog() {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF16211C),
+        title: const Text(
+          'Añadir héroe',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          'No tienes ningún héroe que puedas añadir.',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cerrar'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final campaign = widget.campaign;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(campaign.name),
@@ -56,7 +129,7 @@ class CampaignDetailScreen extends StatelessWidget {
                           ),
                           _InfoPill(
                             icon: Icons.groups_rounded,
-                            label: '${campaign.heroCount} héroes',
+                            label: '${_heroes.length} héroes',
                           ),
                           _InfoPill(
                             icon: Icons.map_rounded,
@@ -115,22 +188,31 @@ class CampaignDetailScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      if (campaign.heroCount == 0)
+                      if (_isLoadingHeroes)
+                        const Center(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            child: CircularProgressIndicator(),
+                          ),
+                        )
+                      else if (_heroes.isEmpty)
                         const Text(
                           'No hay héroes añadidos todavía.',
                           style: TextStyle(color: Colors.white70),
                         )
                       else
                         Column(
-                          children: List.generate(
-                            campaign.heroCount,
-                            (index) => Padding(
-                              padding: const EdgeInsets.only(bottom: 10),
-                              child: _HeroPreviewTile(
-                                name: 'Héroe ${index + 1}',
-                              ),
-                            ),
-                          ),
+                          children: _heroes
+                              .map(
+                                (hero) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 10),
+                                  child: _CampaignHeroTile(
+                                    hero: hero,
+                                    onTap: () => _openHeroDialog(hero),
+                                  ),
+                                ),
+                              )
+                              .toList(),
                         ),
                     ],
                   ),
@@ -140,24 +222,16 @@ class CampaignDetailScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       ActionButtonTile(
-                        icon: Icons.groups_rounded,
-                        label: 'Ver héroes',
-                        onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Ver héroes')),
-                          );
-                        },
+                        icon: Icons.person_add_alt_1_rounded,
+                        label: 'Añadir héroe',
+                        onTap: _showAddHeroUnavailableDialog,
                       ),
                       const SizedBox(height: 10),
                       ActionButtonTile(
                         icon: Icons.alt_route_rounded,
                         label: 'Ver siguientes niveles',
                         onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Ver siguientes niveles'),
-                            ),
-                          );
+                          _showNotImplementedMessage('Ver siguientes niveles');
                         },
                       ),
                       const SizedBox(height: 10),
@@ -165,11 +239,7 @@ class CampaignDetailScreen extends StatelessWidget {
                         icon: Icons.task_alt_rounded,
                         label: 'Ver niveles superados',
                         onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Ver niveles superados'),
-                            ),
-                          );
+                          _showNotImplementedMessage('Ver niveles superados');
                         },
                       ),
                       const SizedBox(height: 10),
@@ -177,11 +247,7 @@ class CampaignDetailScreen extends StatelessWidget {
                         icon: Icons.block_rounded,
                         label: 'Ver niveles descartados',
                         onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Ver niveles descartados'),
-                            ),
-                          );
+                          _showNotImplementedMessage('Ver niveles descartados');
                         },
                       ),
                       const SizedBox(height: 10),
@@ -189,11 +255,7 @@ class CampaignDetailScreen extends StatelessWidget {
                         icon: Icons.library_books_rounded,
                         label: 'Ver todos los niveles',
                         onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Ver todos los niveles'),
-                            ),
-                          );
+                          _showNotImplementedMessage('Ver todos los niveles');
                         },
                       ),
                     ],
@@ -208,9 +270,7 @@ class CampaignDetailScreen extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
                     onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Pasar de acto')),
-                      );
+                      _showNotImplementedMessage('Pasar de acto');
                     },
                     icon: const Icon(Icons.auto_awesome_rounded),
                     label: const Text(
@@ -286,36 +346,89 @@ class _PendingLevelTile extends StatelessWidget {
   }
 }
 
-class _HeroPreviewTile extends StatelessWidget {
-  final String name;
+class _CampaignHeroTile extends StatelessWidget {
+  final CampaignHero hero;
+  final VoidCallback onTap;
 
-  const _HeroPreviewTile({required this.name});
+  const _CampaignHeroTile({required this.hero, required this.onTap});
+
+  String get _stateLabel {
+    switch (hero.currentState) {
+      case HeroState.ok:
+        return 'OK';
+      case HeroState.vulnerable:
+        return 'Vulnerable';
+    }
+  }
+
+  String get _statusesLabel {
+    if (hero.statuses.isEmpty) {
+      return 'Sin estados';
+    }
+
+    return hero.statuses.join(', ');
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
         borderRadius: BorderRadius.circular(14),
-        color: const Color(0xFF1F2E2A),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              color: Colors.black.withValues(alpha: 0.25),
-            ),
-            child: const Icon(Icons.person_rounded, color: Colors.white),
+        onTap: onTap,
+        child: Ink(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            color: const Color(0xFF1F2E2A),
           ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(name, style: const TextStyle(color: Colors.white)),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.black.withValues(alpha: 0.25),
+                ),
+                child: const Icon(Icons.person_rounded, color: Colors.white),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      hero.name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Estado: $_stateLabel · Heridas: ${hero.currentWounds}/${hero.maxWounds}',
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _statusesLabel,
+                      style: const TextStyle(
+                        color: Colors.white60,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right_rounded, color: Colors.white70),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

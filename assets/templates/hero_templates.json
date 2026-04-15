@@ -1,0 +1,26 @@
+[
+    {
+        "id": "bren_tylis",
+        "name": "Bren Tylis",
+        "specialAbilityName": "La Guía de Yondara",
+        "startingEquipmentName": "Reliquias del pasado"
+    },
+    {
+        "id": "drolf_cabezahierro",
+        "name": "Drolf Cabezahierro",
+        "specialAbilityName": "Explorador Aguerrido",
+        "startingEquipmentName": "Bártulos de montaraz"
+    },
+    {
+        "id": "edmark_valoran",
+        "name": "Edmark Valoran",
+        "specialAbilityName": "Furia Iracunda",
+        "startingEquipmentName": "Escudo de la Mantícora"
+    },
+    {
+        "id": "inara_sion",
+        "name": "Inara Sion",
+        "specialAbilityName": "Barrera de Agua",
+        "startingEquipmentName": "Filo de Aguas Vivas"
+    }
+]

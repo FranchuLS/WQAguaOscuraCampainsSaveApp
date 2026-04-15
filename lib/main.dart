@@ -7,7 +7,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
   await Hive.openBox('campaignsBox');
-
+  await Hive.openBox('campaignHeroesBox');
   runApp(const WQApp());
 }
 
